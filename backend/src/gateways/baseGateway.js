@@ -1,3 +1,5 @@
+const { v4: uuidv4 } = require('uuid');
+
 class BaseGateway {
   constructor(name, baseSuccessRate, baseLatency) {
     this.name = name;
@@ -22,7 +24,7 @@ class BaseGateway {
           resolve({
             success: true,
             gateway: this.name,
-            transactionId: `txn_${this.name.toLowerCase()}_${Date.now()}`,
+            transactionId: uuidv4(),
             latency: Math.round(latency)
           });
         } else {

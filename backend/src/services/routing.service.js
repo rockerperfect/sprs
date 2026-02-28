@@ -5,6 +5,7 @@ const circuitBreaker = require('./circuitBreaker.service');
 const transactionRepo = require('../repositories/transaction.repository');
 const gatewayRepo = require('../repositories/gateway.repository');
 const logger = require('../utils/logger');
+const { v4: uuidv4 } = require('uuid');
 
 // Define priority order. 
 // A is primary, B is secondary, C is tertiary fallback.
@@ -50,7 +51,7 @@ class RoutingService {
         
         // Don't log latency for failures yet, or log as 0 or max timeout. We'll use 0 for failure records.
         this.logTransaction({
-          id: `txn_fail_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+          id: uuidv4(),
           gateway: gwName,
           status: 'FAILED',
           latency: 0 
@@ -80,6 +81,10 @@ class RoutingService {
           total_requests: (stats.total_requests || 0) + 1
         });
       }
+
+      // Trigger health score update
+      const healthService = require('./health.service');
+      await healthService.evaluateHealth(transactionData.gateway);
 
     } catch (err) {
       logger.error('Failed to log transaction', err);
