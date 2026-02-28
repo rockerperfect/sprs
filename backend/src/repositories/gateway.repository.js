@@ -50,6 +50,18 @@ class GatewayRepository {
 
     return res.rows[0];
   }
+  async resetAllGatewayStats() {
+    await pool.query(`
+      UPDATE gateway_stats 
+      SET success_rate = 1.0, 
+          avg_latency = 0.0, 
+          total_requests = 0, 
+          health_score = 1.0, 
+          consecutive_failures = 0, 
+          status = 'Healthy', 
+          circuit_state = 'CLOSED'
+    `);
+  }
 }
 
 module.exports = new GatewayRepository();

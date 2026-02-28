@@ -1,4 +1,6 @@
 const routingService = require('../services/routing.service');
+const transactionRepo = require('../repositories/transaction.repository');
+const gatewayRepo = require('../repositories/gateway.repository');
 
 const simulateBulk = async (req, res) => {
   try {
@@ -41,6 +43,17 @@ const simulateBulk = async (req, res) => {
   }
 };
 
+const resetSimulation = async (req, res) => {
+  try {
+    await transactionRepo.deleteAllTransactions();
+    await gatewayRepo.resetAllGatewayStats();
+    res.status(200).json({ success: true, message: 'Simulator reset successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to reset simulator' });
+  }
+};
+
 module.exports = {
-  simulateBulk
+  simulateBulk,
+  resetSimulation
 };

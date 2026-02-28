@@ -9,6 +9,9 @@ class TransactionRepository {
       [id, gateway, status, latency]
     );
   }
+  async deleteAllTransactions() {
+    await pool.query('TRUNCATE TABLE transactions');
+  }
 }
 
 module.exports = new TransactionRepository();
