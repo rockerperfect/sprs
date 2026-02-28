@@ -27,3 +27,4 @@ pnpm-debug.log*
 !.env.example
 
 prd_resources/
+smart-payment-routing-simulator
