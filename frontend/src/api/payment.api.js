@@ -9,3 +9,8 @@ export const simulateBulk = async (count) => {
   const response = await api.post('/simulate-bulk', { count });
   return response.data;
 };
+
+export const resetSimulation = async () => {
+  const response = await api.post('/reset');
+  return response.data;
+};

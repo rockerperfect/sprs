@@ -37,7 +37,7 @@ const initDb = async () => {
     `);
 
     // Insert initial gateway stats if empty
-    const gateways = ['GatewayA', 'GatewayB', 'GatewayC'];
+    const gateways = ['Gateway-A', 'Gateway-B', 'Gateway-C'];
     for (const gw of gateways) {
       await client.query(`
         INSERT INTO gateway_stats (gateway)

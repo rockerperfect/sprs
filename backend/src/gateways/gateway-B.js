@@ -2,8 +2,8 @@ const BaseGateway = require('./baseGateway');
 
 class GatewayB extends BaseGateway {
   constructor() {
-    // 90% base success rate, 150ms base latency (Faster but slightly less reliable)
-    super('GatewayB', 0.90, 150);
+    // 50% base success rate, 150ms base latency (Unreliable gateway for demonstration)
+    super('Gateway-B', 0.50, 150);
   }
 }
 

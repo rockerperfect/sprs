@@ -31,15 +31,31 @@ class CircuitBreakerService {
   }
 
   /**
-   * Records a success and resets breaker if needed.
+   * Records a success.
+   * - If circuit is HALF-OPEN: this is the probe success → close and reset fully.
+   * - If circuit is CLOSED: simply mark status Healthy; do NOT reset consecutive_failures
+   *   (those are only cleared after a HALF-OPEN recovery or explicit reset).
    * @param {string} gatewayName 
    */
   async recordSuccess(gatewayName) {
-    await gatewayRepo.updateStats(gatewayName, {
-      consecutive_failures: 0,
-      circuit_state: 'CLOSED', // Reset to CLOSED
-      status: 'Healthy'
-    });
+    const stats = await gatewayRepo.getGatewayStats(gatewayName);
+    if (!stats) return;
+
+    if (stats.circuit_state === 'HALF-OPEN') {
+      // Probe succeeded – fully close the circuit and reset failures
+      await gatewayRepo.updateStats(gatewayName, {
+        consecutive_failures: 0,
+        circuit_state: 'CLOSED',
+        status: 'Healthy'
+      });
+      logger.info(`Circuit breaker for ${gatewayName} recovered: HALF-OPEN → CLOSED`);
+    } else if (stats.circuit_state === 'CLOSED') {
+      // Normal success: just ensure status is Healthy; preserve consecutive_failures count
+      // (consecutive_failures only resets after a full HALF-OPEN recovery)
+      if (stats.status !== 'Healthy') {
+        await gatewayRepo.updateStats(gatewayName, { status: 'Healthy' });
+      }
+    }
   }
 
   /**
