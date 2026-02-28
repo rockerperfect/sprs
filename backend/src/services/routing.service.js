@@ -70,17 +70,8 @@ class RoutingService {
     try {
       await transactionRepo.createTransaction(transactionData);
       
-      // Update basic gateway stats here simply by incrementing total_requests and recalculating rolling if needed
-      // To prevent race conditions, the robust way would be DB triggers or doing this in a batch worker, 
-      // but for simulation, we'll increment strictly here.
-      
-      // We will do more robust rolling aggregation in Phase 2 Intelligence Layer.
-      const stats = await gatewayRepo.getGatewayStats(transactionData.gateway);
-      if (stats) {
-        await gatewayRepo.updateStats(transactionData.gateway, {
-          total_requests: (stats.total_requests || 0) + 1
-        });
-      }
+      // Update basic gateway stats atomically to prevent race conditions during bulk execution
+      await gatewayRepo.incrementTotalRequests(transactionData.gateway);
 
       // Trigger health score update
       const healthService = require('./health.service');
