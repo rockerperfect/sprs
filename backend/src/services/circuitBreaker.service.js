@@ -16,18 +16,29 @@ class CircuitBreakerService {
 
     if (stats.circuit_state === 'OPEN') {
       const now = Date.now();
-      const lastFailureTime = new Date(stats.last_failure_timestamp || 0).getTime();
+      const lastFailureTime = Number(stats.last_failure_epoch) || 0;
       
+      logger.info(`[DEBUG] ${gatewayName} Cooldown Check -> now: ${now}, last: ${lastFailureTime}, diff: ${now - lastFailureTime} (Needs > 60000). Epoch: ${stats.last_failure_epoch}`);
+
       if (now - lastFailureTime > COOLDOWN_PERIOD_MS) {
-        // Transition to HALF-OPEN
-        await gatewayRepo.updateStats(gatewayName, { circuit_state: 'HALF-OPEN' });
-        logger.info(`Circuit breaker for ${gatewayName} is now HALF-OPEN`);
-        return true;
+        // Try to atomically transition to HALF-OPEN
+        const locked = await gatewayRepo.tryLockHalfOpen(gatewayName);
+        if (locked) {
+          logger.info(`Circuit breaker for ${gatewayName} is now HALF-OPEN`);
+          return true; // Allow the probe request through
+        } else {
+          return false; // Already HALF-OPEN by another concurrent probe
+        }
       }
       return false; // Still OPEN, cool down not yet reached
     }
 
-    return true; // CLOSED or HALF-OPEN
+    if (stats.circuit_state === 'HALF-OPEN') {
+      // A probe request is already in flight. Reject all other traffic until it resolves.
+      return false; 
+    }
+
+    return true; // CLOSED
   }
 
   /**
@@ -60,30 +71,20 @@ class CircuitBreakerService {
 
   /**
    * Records a failure and trips breaker if threshold is met.
+   * Uses an atomic database query to solve race conditions during bulk requests.
    * @param {string} gatewayName 
    */
   async recordFailure(gatewayName) {
-    const stats = await gatewayRepo.getGatewayStats(gatewayName);
+    const stats = await gatewayRepo.recordGatewayFailure(gatewayName, FAILURE_THRESHOLD);
     if (!stats) return;
 
-    const newFailures = (stats.consecutive_failures || 0) + 1;
-    const updates = {
-      consecutive_failures: newFailures,
-      last_failure_timestamp: new Date().toISOString()
-    };
-
-    if (newFailures >= FAILURE_THRESHOLD) {
-      updates.circuit_state = 'OPEN';
-      updates.status = 'Degraded';
-      logger.warn(`Circuit breaker for ${gatewayName} tripped to OPEN`);
-    } else if (stats.circuit_state === 'HALF-OPEN') {
-      // If it fails during HALF-OPEN, trip it back to OPEN immediately
-      updates.circuit_state = 'OPEN';
-      updates.status = 'Degraded';
-      logger.warn(`Circuit breaker for ${gatewayName} tripped back to OPEN from HALF-OPEN`);
+    if (stats.circuit_state === 'OPEN') {
+      if (stats.consecutive_failures === FAILURE_THRESHOLD) {
+        logger.warn(`Circuit breaker for ${gatewayName} tripped to OPEN`);
+      } else if (stats.consecutive_failures > FAILURE_THRESHOLD) {
+        logger.warn(`Circuit breaker for ${gatewayName} tripped back to OPEN from HALF-OPEN`);
+      }
     }
-
-    await gatewayRepo.updateStats(gatewayName, updates);
   }
 }
 
