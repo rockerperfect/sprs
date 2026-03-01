@@ -1,11 +1,48 @@
 import React, { useState } from 'react';
 import { simulateBulk } from '../../api/payment.api';
-import { Settings, Play, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Settings, Play, CircleCheck, CircleAlert, Minus, Plus } from 'lucide-react';
+
+const MIN = 10;
+const MAX = 1000;
+const STEP = 10;
 
 const PaymentSimulator = ({ onSimulationComplete }) => {
     const [count, setCount] = useState(10);
+    const [inputValue, setInputValue] = useState('10');
     const [isSimulating, setIsSimulating] = useState(false);
     const [result, setResult] = useState(null);
+
+    const applyCount = (val) => {
+        const clamped = Math.max(MIN, Math.min(MAX, val));
+        setCount(clamped);
+        setInputValue(String(clamped));
+    };
+
+    const handleSliderChange = (e) => {
+        applyCount(Number(e.target.value));
+    };
+
+    const handleInputChange = (e) => {
+        // Allow typing freely, only digits
+        const raw = e.target.value.replace(/[^0-9]/g, '');
+        setInputValue(raw);
+    };
+
+    const handleInputBlur = () => {
+        const parsed = parseInt(inputValue, 10);
+        if (isNaN(parsed) || parsed < MIN) {
+            applyCount(MIN);
+        } else {
+            applyCount(parsed);
+        }
+    };
+
+    const handleInputKeyDown = (e) => {
+        if (e.key === 'Enter') e.target.blur();
+    };
+
+    const decrement = () => applyCount(Math.round((count - STEP) / STEP) * STEP);
+    const increment = () => applyCount(Math.round((count + STEP) / STEP) * STEP);
 
     const handleSimulate = async () => {
         setIsSimulating(true);
@@ -13,9 +50,7 @@ const PaymentSimulator = ({ onSimulationComplete }) => {
         try {
             const res = await simulateBulk(count);
             setResult({ success: true, message: res.message });
-            if (onSimulationComplete) {
-                onSimulationComplete();
-            }
+            if (onSimulationComplete) onSimulationComplete();
         } catch (err) {
             setResult({
                 success: false,
@@ -38,21 +73,70 @@ const PaymentSimulator = ({ onSimulationComplete }) => {
                     <label className="block text-[10px] font-medium text-[#8b949e] uppercase tracking-widest mb-3">
                         Transaction Volume
                     </label>
-                    <input
-                        type="range"
-                        min="10"
-                        max="1000"
-                        step="10"
-                        value={count}
-                        onChange={(e) => setCount(Number(e.target.value))}
-                        className="w-full"
-                    />
-                    <div className="flex justify-between text-xs text-[#8b949e] mt-3">
-                        <span>10</span>
-                        <span className="font-semibold text-indigo-400 bg-indigo-950 border border-indigo-800 px-3 py-0.5 rounded-full font-data">
-                            {count}
-                        </span>
-                        <span>1000</span>
+
+                    {/* Slider row with - and + buttons */}
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={decrement}
+                            disabled={count <= MIN}
+                            aria-label="Decrease by 10"
+                            className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg
+                                       bg-[#1c2333] border border-[#30363d] text-[#8b949e]
+                                       hover:bg-[#21262d] hover:text-[#e6edf3] hover:border-[#484f58]
+                                       disabled:opacity-30 disabled:cursor-not-allowed
+                                       transition-all duration-150"
+                        >
+                            <Minus className="w-3.5 h-3.5" />
+                        </button>
+
+                        <input
+                            type="range"
+                            min={MIN}
+                            max={MAX}
+                            step={STEP}
+                            value={count}
+                            onChange={handleSliderChange}
+                            className="flex-1"
+                        />
+
+                        <button
+                            onClick={increment}
+                            disabled={count >= MAX}
+                            aria-label="Increase by 10"
+                            className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg
+                                       bg-[#1c2333] border border-[#30363d] text-[#8b949e]
+                                       hover:bg-[#21262d] hover:text-[#e6edf3] hover:border-[#484f58]
+                                       disabled:opacity-30 disabled:cursor-not-allowed
+                                       transition-all duration-150"
+                        >
+                            <Plus className="w-3.5 h-3.5" />
+                        </button>
+                    </div>
+
+                    {/* Scale labels + manual input */}
+                    <div className="flex items-center justify-between mt-3 gap-3">
+                        <span className="text-xs text-[#8b949e] shrink-0">{MIN}</span>
+
+                        {/* Manual integer input */}
+                        <div className="flex items-center gap-1.5">
+                            <input
+                                type="text"
+                                inputMode="numeric"
+                                pattern="[0-9]*"
+                                value={inputValue}
+                                onChange={handleInputChange}
+                                onBlur={handleInputBlur}
+                                onKeyDown={handleInputKeyDown}
+                                aria-label="Transaction count"
+                                className="w-20 text-center text-sm font-semibold font-data
+                                           text-indigo-400 bg-indigo-950 border border-indigo-800
+                                           rounded-lg px-2 py-1 outline-none
+                                           focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/40
+                                           transition-all duration-150"
+                            />
+                        </div>
+
+                        <span className="text-xs text-[#8b949e] shrink-0">{MAX}</span>
                     </div>
                 </div>
 
@@ -71,9 +155,9 @@ const PaymentSimulator = ({ onSimulationComplete }) => {
                             : 'bg-[#2d0d0d] border-red-900 text-red-400'
                         }`}>
                         {result.success ? (
-                            <CheckCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                            <CircleCheck className="w-4 h-4 shrink-0 mt-0.5" />
                         ) : (
-                            <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                            <CircleAlert className="w-4 h-4 shrink-0 mt-0.5" />
                         )}
                         <p>{result.message}</p>
                     </div>
