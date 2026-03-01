@@ -1,5 +1,5 @@
 import React from 'react';
-import { Activity, XCircle, AlertTriangle, CheckCircle } from 'lucide-react';
+import { ShieldCheck, TrendingDown, LockKeyhole, LockKeyholeOpen, RefreshCw } from 'lucide-react';
 
 const MetricsTable = ({ stats }) => {
     const getStatusBadge = (status) => {
@@ -7,13 +7,13 @@ const MetricsTable = ({ stats }) => {
             case 'Healthy':
                 return (
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold bg-[#0d2818] text-emerald-400 rounded-full border border-emerald-900 whitespace-nowrap">
-                        <CheckCircle className="w-3 h-3 shrink-0" />Healthy
+                        <ShieldCheck className="w-3.5 h-3.5 shrink-0" />Healthy
                     </span>
                 );
             case 'Degraded':
                 return (
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold bg-[#2d1f06] text-amber-400 rounded-full border border-amber-900 whitespace-nowrap">
-                        <AlertTriangle className="w-3 h-3 shrink-0" />Degraded
+                        <TrendingDown className="w-3.5 h-3.5 shrink-0" />Degraded
                     </span>
                 );
             default:
@@ -30,19 +30,19 @@ const MetricsTable = ({ stats }) => {
             case 'CLOSED':
                 return (
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold bg-[#0d2818] text-emerald-400 rounded-full border border-emerald-900 whitespace-nowrap">
-                        <Activity className="w-3 h-3 shrink-0" />CLOSED
+                        <LockKeyhole className="w-3.5 h-3.5 shrink-0" />CLOSED
                     </span>
                 );
             case 'OPEN':
                 return (
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold bg-[#2d0d0d] text-red-400 rounded-full border border-red-900 animate-pulse whitespace-nowrap">
-                        <XCircle className="w-3 h-3 shrink-0" />OPEN
+                        <LockKeyholeOpen className="w-3.5 h-3.5 shrink-0" />OPEN
                     </span>
                 );
             case 'HALF-OPEN':
                 return (
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold bg-[#1a1228] text-violet-400 rounded-full border border-violet-900 whitespace-nowrap">
-                        <AlertTriangle className="w-3 h-3 shrink-0" />HALF-OPEN
+                        <RefreshCw className="w-3.5 h-3.5 shrink-0" />HALF-OPEN
                     </span>
                 );
             default:
