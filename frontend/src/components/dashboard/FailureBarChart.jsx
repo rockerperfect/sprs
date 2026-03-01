@@ -1,5 +1,5 @@
 import React from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell, ResponsiveContainer } from 'recharts';
 
 const FailureBarChart = ({ stats }) => {
     const data = stats.map(s => ({
@@ -7,28 +7,56 @@ const FailureBarChart = ({ stats }) => {
         Failures: s.consecutiveFailures,
     }));
 
+    const getBarColor = (failures) => {
+        if (failures >= 5) return '#f87171'; // red — circuit tripped
+        if (failures >= 3) return '#fb923c'; // orange — approaching threshold
+        return '#6366f1';                    // indigo — healthy range
+    };
+
     return (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <h3 className="text-md font-semibold text-gray-800 mb-4">Consecutive Failures</h3>
+        <div className="bg-[#161b22] rounded-xl border border-[#30363d] p-5 sm:p-6">
+            <h3 className="text-xs font-semibold text-[#8b949e] uppercase tracking-widest mb-4">Consecutive Failures</h3>
             {data.length === 0 ? (
-                <div className="h-64 flex items-center justify-center text-gray-400 text-sm">
+                <div className="h-48 sm:h-56 md:h-64 flex items-center justify-center text-[#484f58] text-sm">
                     No failure data available
                 </div>
             ) : (
-                <div className="w-full h-64">
+                <div className="w-full h-48 sm:h-56 md:h-64">
                     <ResponsiveContainer width="100%" height="100%">
-                        <BarChart
-                            data={data}
-                            margin={{ top: 20, right: 30, left: -20, bottom: 5 }}
-                        >
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                            <XAxis dataKey="name" axisLine={false} tickLine={false} />
-                            <YAxis axisLine={false} tickLine={false} allowDecimals={false} />
-                            <Tooltip
-                                cursor={{ fill: '#fee2e2' }}
-                                contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                        <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#21262d" vertical={false} />
+                            <XAxis
+                                dataKey="name"
+                                axisLine={false}
+                                tickLine={false}
+                                tick={{ fill: '#8b949e', fontSize: 11 }}
                             />
-                            <Bar dataKey="Failures" fill="#f43f5e" radius={[4, 4, 0, 0]} />
+                            <YAxis
+                                axisLine={false}
+                                tickLine={false}
+                                allowDecimals={false}
+                                tick={{ fill: '#8b949e', fontSize: 11 }}
+                            />
+                            <Tooltip
+                                cursor={{ fill: 'rgba(248,113,113,0.05)' }}
+                                contentStyle={{
+                                    backgroundColor: '#1c2333',
+                                    border: '1px solid #30363d',
+                                    borderRadius: '8px',
+                                    color: '#e6edf3',
+                                    fontSize: '12px',
+                                    boxShadow: '0 4px 20px rgba(0,0,0,0.4)'
+                                }}
+                                itemStyle={{ color: '#e6edf3' }}
+                            />
+                            <Bar dataKey="Failures" radius={[4, 4, 0, 0]}>
+                                {data.map((entry, index) => (
+                                    <Cell
+                                        key={`cell-${index}`}
+                                        fill={getBarColor(entry.Failures)}
+                                    />
+                                ))}
+                            </Bar>
                         </BarChart>
                     </ResponsiveContainer>
                 </div>

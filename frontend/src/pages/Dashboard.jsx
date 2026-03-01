@@ -45,15 +45,17 @@ const Dashboard = () => {
 
     useEffect(() => {
         fetchDashboardData();
-        // Auto-refresh every 5 seconds
         const interval = setInterval(fetchDashboardData, 5000);
         return () => clearInterval(interval);
     }, []);
 
     if (loading && !metrics) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+            <div className="min-h-screen bg-[#0d1117] flex items-center justify-center">
+                <div className="flex flex-col items-center gap-4">
+                    <div className="animate-spin rounded-full h-10 w-10 border-2 border-[#30363d] border-t-indigo-500"></div>
+                    <p className="text-[#8b949e] text-sm">Loading dashboard...</p>
+                </div>
             </div>
         );
     }
@@ -62,29 +64,35 @@ const Dashboard = () => {
         <>
             <Navbar />
             <PageContainer>
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Left Column Controls */}
-                    <div className="lg:col-span-1 space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 lg:gap-6">
 
-                        {/* High Level Stats Summary */}
-                        <div className="flex justify-between items-center bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-                            <h2 className="text-lg font-bold text-gray-800">Overview</h2>
+                    {/* Left Column */}
+                    <div className="lg:col-span-1 space-y-5">
+
+                        {/* Overview Header */}
+                        <div className="flex justify-between items-center bg-[#161b22] rounded-xl border border-[#30363d] px-4 py-3">
+                            <div>
+                                <p className="text-[10px] font-medium text-[#8b949e] uppercase tracking-widest">System</p>
+                                <h2 className="text-sm font-semibold text-[#e6edf3]">Overview</h2>
+                            </div>
                             <button
                                 onClick={handleReset}
                                 disabled={isResetting}
-                                className="text-xs font-semibold bg-red-50 text-red-600 px-3 py-1.5 rounded hover:bg-red-100 transition-colors disabled:opacity-50"
+                                className="btn-danger"
                             >
                                 {isResetting ? 'Resetting...' : 'Reset Data'}
                             </button>
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-                                <p className="text-sm font-medium text-gray-500 mb-1">Total Transactions</p>
-                                <p className="text-2xl font-bold text-gray-900">{metrics?.totalTransactions || 0}</p>
+
+                        {/* KPI Cards */}
+                        <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                            <div className="bg-[#161b22] rounded-xl border border-[#30363d] p-4 sm:p-5">
+                                <p className="text-[10px] font-medium text-[#8b949e] uppercase tracking-widest mb-2">Total Transactions</p>
+                                <p className="text-2xl sm:text-3xl font-bold text-[#e6edf3] font-data">{metrics?.totalTransactions || 0}</p>
                             </div>
-                            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-                                <p className="text-sm font-medium text-gray-500 mb-1">Global Success Rate</p>
-                                <p className="text-2xl font-bold text-green-600">{metrics?.successRate || 0}%</p>
+                            <div className="bg-[#161b22] rounded-xl border border-[#30363d] p-4 sm:p-5">
+                                <p className="text-[10px] font-medium text-[#8b949e] uppercase tracking-widest mb-2">Success Rate</p>
+                                <p className="text-2xl sm:text-3xl font-bold text-emerald-400 font-data">{metrics?.successRate || 0}%</p>
                             </div>
                         </div>
 
@@ -93,17 +101,17 @@ const Dashboard = () => {
                         {metrics?.trafficDistribution && (
                             <TrafficPieChart distribution={metrics.trafficDistribution} />
                         )}
-
                     </div>
 
-                    {/* Right Column Tables & Charts */}
-                    <div className="lg:col-span-2 space-y-8">
+                    {/* Right Column */}
+                    <div className="lg:col-span-2 space-y-5">
                         <MetricsTable stats={gatewayStats} />
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <SuccessRateChart stats={gatewayStats} />
                             <FailureBarChart stats={gatewayStats} />
                         </div>
                     </div>
+
                 </div>
             </PageContainer>
         </>
