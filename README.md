@@ -1,106 +1,251 @@
-# 🔀 Smart Payment Routing Simulator (SPRS)
+<div align="center">
 
-![Node.js](https://img.shields.io/badge/Node.js-18.x-green.svg)
-![React](https://img.shields.io/badge/React-18-blue.svg)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-blue.svg)
+<img src="prd_resources/icon.png" alt="SPRS Logo" width="100" height="100" style="border-radius: 20px;" />
 
-A full-stack, enterprise-grade distributed system simulator that orchestrates high-concurrency payment traffic across multiple simulated gateway nodes. It features real-time **Circuit Breaking**, mathematical **Anomaly Detection**, atomic concurrency management, and an interactive React dashboard.
+# Smart Payment Routing Simulator
 
----
+**Enterprise-grade distributed payment infrastructure — simulated.**
 
-## 🏗️ Architecture & Mechanics
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-sprs--mu.vercel.app-6366f1?style=for-the-badge&logo=vercel&logoColor=white)](https://sprs-mu.vercel.app)
+[![Backend](https://img.shields.io/badge/Backend-Render-46E3B7?style=for-the-badge&logo=render&logoColor=white)](https://sprs-backend.onrender.com)
+[![Node.js](https://img.shields.io/badge/Node.js-v18+-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org)
+[![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org)
+[![License](https://img.shields.io/badge/License-ISC-8b5cf6?style=for-the-badge)](#)
 
-SPRS simulates how massive payment processors (like Stripe or PayPal) handle extreme network conditions. Instead of pushing traffic to a single server, SPRS smartly cascades traffic across primary and fallback gateways based on mathematical health scores and consecutive failure triggers.
-
-### 1. The Gateways (The Network)
-The system is built on 3 mock payment gateways, each with inherent "Jitter" (randomized latency variance) and hardcoded success baselines to mimic real-world unpredictability:
-* 🟢 **Gateway-A (Primary):** High priority. 60% baseline success rate. ~300ms latency.
-* 🟡 **Gateway-B (Fallback 1):** Medium priority. 50% baseline success rate. ~150ms latency.
-* 🔴 **Gateway-C (Fallback 2 / Safety Net):** Lowest priority. 100% success rate. ~600ms latency.
-
-### 2. High-Concurrency Traffic Routing
-When 100+ concurrent requests hit the `/simulate-bulk` API, it triggers the router:
-* Traffic hits **Gateway-A**. 
-* If a payment fails, the system instantly catches the error and silently cascades those specific users to **Gateway-B**.
-* If B drops the ball, the system forces the traffic directly onto the slow, but hyper-reliable **Gateway-C**.
-
-### 3. Circuit Breaker (`HALF-OPEN` Cooldown Mechanism)
-SPRS features a true distributed Circuit Breaker pattern to protect failing gateways from being suffocated by "Stampede" traffic. 
-* **OPEN State:** If a gateway registers **5 consecutive failures**, its circuit snaps `OPEN`. The gateway is immediately taken completely offline, and all future traffic perfectly bypasses it directly to the next fallback node.
-* **HALF-OPEN State:** After exactly **60 seconds**, the circuit tries to recover. If 1,000 new requests hit the network, the database locks the gateway in a `HALF-OPEN` state. It allows *exactly 1 request* to slip through as a "probe", while instantly rerouting the other 999 requests to safety. If the probe succeeds, the circuit repairs itself (`CLOSED`). If it fails, it violently snaps shut again (`OPEN`) for another 60 seconds.
-
-### 4. Intelligence Layer & Mathematical Aggregation
-* **Rolling Health:** Every gateway constantly calculates its health using a sliding metric formula over its last 20 requests: `(0.6 * SuccessRate) + (0.4 * (1/AvgLatency))`.
-* **Anomaly Detection:** If a gateway's live success rate drops 20% below its statistical baseline, it is instantly flagged as `Degraded`.
-* **Atomic Validation:** Counters are completely immune to Javascript Read-Modify-Write Race Conditions. By leveraging native `PostgreSQL ACID` triggers and `EXTRACT(EPOCH)` timezone normalization, 10,000 concurrent requests will increment flawlessly.
+</div>
 
 ---
 
-## 🚀 Quick Start Guide
+## 🌐 What is SPRS?
+
+SPRS is a full-stack distributed systems simulator that replicates how production-grade payment processors — like Stripe, PayPal, or Razorpay — handle extreme traffic, cascading failures, and self-healing recovery. It isn't a toy demo. It runs real concurrent PostgreSQL transactions with atomic SQL operations, a stateful circuit breaker, anomaly detection, and an interactive real-time monitoring dashboard.
+
+> **In short:** Throw 1,000 concurrent payment requests at it. Watch it route, fail, recover, and explain itself — live.
+
+---
+
+## ✨ Feature Highlights
+
+| Feature | Description |
+|---|---|
+| 🔀 **Intelligent Routing** | Dynamically scores each gateway by health and cascades traffic to fallbacks |
+| ⚡ **Circuit Breaker** | Full `CLOSED → OPEN → HALF-OPEN → CLOSED` state machine per gateway |
+| 🧠 **Anomaly Detection** | Flags gateways whose live rate drops >20% below statistical baseline |
+| 🔒 **Atomic Concurrency** | PostgreSQL `UPDATE ... SET col = col + 1` prevents race conditions under 10k+ RPS |
+| 📊 **Real-time Dashboard** | Live charts, animated KPI counters, and colour-coded health badges |
+| 🌑 **Dark Fintech UI** | Premium dark DevOps design system with micro-animations |
+
+---
+
+## 🏗️ System Architecture
+
+```mermaid
+graph TD
+    Client(["🌐 Client / Browser"])
+    FE(["⚛️ React Frontend\nVercel"])
+    BE(["🖥️ Express Backend\nRender"])
+    DB(["🐘 PostgreSQL\nRender DB"])
+
+    Router["🔀 Routing Service"]
+    GW_A["🟢 Gateway-A\n60% success · ~300ms"]
+    GW_B["🟡 Gateway-B\n50% success · ~150ms"]
+    GW_C["🔴 Gateway-C\n100% success · ~600ms"]
+    CB["⚡ Circuit Breaker\nOPEN / HALF-OPEN / CLOSED"]
+
+    Client --> FE
+    FE -->|"VITE_API_URL"| BE
+    BE --> DB
+    BE --> Router
+    Router --> CB
+    CB --> GW_A
+    CB --> GW_B
+    CB --> GW_C
+```
+
+---
+
+## ⚙️ How It Works
+
+### 🔀 1. Traffic Routing
+Every simulated payment hits **Gateway-A** first (highest priority). On failure, the request silently cascades to **Gateway-B**, then to **Gateway-C** — the 100%-reliable safety net. Users never see a failure.
+
+### ⚡ 2. Circuit Breaker State Machine
+
+```
+CLOSED ──(5 consecutive failures)──▶ OPEN ──(60s timeout)──▶ HALF-OPEN
+  ▲                                                               │
+  └─────────────(probe succeeds)─────────────────────────────────┘
+              (probe fails → back to OPEN)
+```
+
+| State | Behaviour |
+|---|---|
+| 🔒 **CLOSED** | Normal operation. All requests flow through. |
+| 🔓 **OPEN** | Gateway is offline. All traffic bypasses to next fallback. |
+| 🔄 **HALF-OPEN** | One probe request allowed through. Others rerouted safely. |
+
+### 🧠 3. Intelligence Layer
+
+- **Health Score:** `(0.6 × SuccessRate) + (0.4 × (1 / AvgLatency))` — computed over the last 20 requests
+- **Anomaly Detection:** If live success rate drops >20% below baseline → gateway flagged **Degraded**
+- **Atomic SQL:** Counters use `SET col = col + 1` instead of read-modify-write to be fully concurrent-safe
+
+---
+
+## 🗂️ Project Structure
+
+```
+sprs/
+├── 📁 backend/
+│   ├── 📁 src/
+│   │   ├── 📁 config/          # DB pool, env vars
+│   │   ├── 📁 controllers/     # Route handlers
+│   │   ├── 📁 gateways/        # Gateway-A/B/C simulation classes
+│   │   ├── 📁 repositories/    # SQL query layer (Repository Pattern)
+│   │   ├── 📁 routes/          # Express API routes
+│   │   ├── 📁 services/        # Routing & circuit breaker logic
+│   │   └── 📄 server.js        # App entry — auto-inits DB on startup
+│   ├── 📁 scripts/
+│   │   └── 📄 init_db.js       # Schema creation + gateway seeding
+│   ├── 📄 .env.example
+│   └── 📄 package.json
+│
+├── 📁 frontend/
+│   ├── 📁 src/
+│   │   ├── 📁 api/             # Axios client + API modules
+│   │   ├── 📁 components/      # Dashboard, Charts, Layout
+│   │   └── 📁 pages/           # Dashboard page
+│   ├── 📄 .env.example
+│   └── 📄 package.json
+│
+└── 📄 README.md
+```
+
+---
+
+## 🚀 Local Development
 
 ### Prerequisites
-1. **Node.js** (v18+)
-2. **PostgreSQL** (v15+) or Docker Desktop
+- **Node.js** v18+
+- **PostgreSQL** v15+ (or Docker)
 
-### 1. Database Setup
-Ensure PostgreSQL is running on your machine.
-Create a database named `sprs_db`.
+### Backend Setup
 
-### 2. Backend Initialization
 ```bash
 cd backend
 
 # Install dependencies
 npm install
 
-# Create environment config
+# Configure environment
 cp .env.example .env
-# (Ensure DATABASE_URL in .env matches your local PostgreSQL credentials)
+# Edit .env — set DATABASE_URL to your local PostgreSQL connection string
 
-# Bootstrap the Database Schema
-npm run init-db
-
-# Start the API Server (Runs on port 5000)
+# Start the API server (port 5000)
+# Tables are created automatically on first startup
 npm run dev
 ```
 
-### 3. Frontend Initialization
+### Frontend Setup
+
 ```bash
 cd frontend
 
 # Install dependencies
 npm install
 
-# Start the Vite React Dashboard (Runs on port 5173)
+# Configure environment
+cp .env.example .env.local
+# For local dev, leave VITE_API_URL empty (defaults to http://localhost:5000/api/v1)
+
+# Start the Vite dev server (port 5173)
 npm run dev
 ```
 
----
-
-## 🎮 How to Test Like an Engineer (Chaos Testing)
-
-Open your browser to the React Dashboard (`http://localhost:5173`).
-
-### Scenario 1: The "Avalanche"
-1. Click **Reset Data** (Red button top right).
-2. Set the slider to **1,000 Transactions**.
-3. Click **Run Simulation**. 
-4. *Watch the safety net:* Notice that 1,000 users initiate payments, but the network processes 1,600+ attempts under the hood. Gateway-C will successfully catch and process immense overflow without dropping a single payment.
-
-### Scenario 2: The "Rollercoaster Recovery"
-1. Hit **Reset Data**.
-2. Run **100 Transactions**. Gateways A and B will fail and trip to **OPEN**.
-3. Put down your mouse and start a timer. Wait exactly **60 seconds**.
-4. Set the slider to **10 Transactions**. Hit **Run**.
-5. *Watch the locking mechanism:* You will visually see exactly *1 request* hit Gateway-A, and *1 request* hit Gateway-B. The `HALF-OPEN` circuit locked the doors and safely rerouted the other 8 requests. If the probe succeeds, watch the Consecutive Failures plunge directly to 0!
+Open **http://localhost:5173** and the dashboard is live. ✅
 
 ---
 
-## 🛠️ Technology Stack
-* **Frontend:** React, Vite, Tailwind CSS, Recharts, Lucide-React, Axios.
-* **Backend:** Node.js, Express.js, PostgreSQL, `pg` driver, UUID.
-* **Architecture:** Abstracted Class Models, Repository Pattern, Stateful Services. 
+## ☁️ Deployment
+
+### Backend → [Render](https://render.com)
+
+1. Create a **Postgres** database on Render — copy the **Internal Database URL**
+2. Create a **Web Service** → connect your GitHub repo → set **Root Directory** to `backend`
+   - **Build Command:** `npm install`
+   - **Start Command:** `npm start`
+3. Add environment variables:
+   ```
+   DATABASE_URL   = <Internal Database URL from step 1>
+   PORT           = 5000
+   NODE_ENV       = production
+   FRONTEND_URL   = https://your-vercel-url.vercel.app
+   ```
+4. Deploy — tables are auto-created on first boot 🎉
+
+### Frontend → [Vercel](https://vercel.com)
+
+1. Import your GitHub repo → set **Root Directory** to `frontend`
+2. Add one environment variable:
+   ```
+   VITE_API_URL = https://your-render-url.onrender.com/api/v1
+   ```
+3. Deploy — Vercel auto-runs `npm run build` ✅
 
 ---
 
-*Built for High-Concurrency, Resiliency Validation, and Chaos Engineering.*
+## 🎮 Chaos Engineering Scenarios
+
+### 💥 Scenario 1 — "The Avalanche"
+> Stress-test the full cascade chain
+
+1. Click **Reset Data**
+2. Set volume to **1,000 transactions** and hit **Run Simulation**
+3. Watch: Gateways A and B trip to ⚠️ **OPEN**, Gateway-C absorbs the overflow at 100% reliability
+4. Notice total *attempts* exceed 1,000 — the cascade is doing its job
+
+### 🔄 Scenario 2 — "The Rollercoaster Recovery"
+> Observe the HALF-OPEN probe mechanism live
+
+1. Click **Reset Data**
+2. Run **100 transactions** — A and B trip to **OPEN**
+3. Wait **60 seconds**
+4. Run **10 transactions**
+5. Watch: exactly **1 probe** hits A, exactly **1 probe** hits B. The other 8 are safely rerouted. If the probe succeeds, consecutive failures drop to **0** and the circuit resets to **CLOSED** ✅
+
+---
+
+## 🛠️ Tech Stack
+
+<div align="center">
+
+| Layer | Technology |
+|---|---|
+| **Frontend** | React 18 · Vite · Tailwind CSS · Recharts · Lucide-React · Axios |
+| **Backend** | Node.js · Express v4 · PostgreSQL · `pg` driver · UUID v8 |
+| **Architecture** | Repository Pattern · Stateful Services · Circuit Breaker Pattern |
+| **Deployment** | Vercel (frontend) · Render (backend + DB) |
+
+</div>
+
+---
+
+## 📡 API Reference
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/v1/simulate-bulk` | Run N concurrent payment simulations |
+| `GET` | `/api/v1/metrics` | Overall success rate + traffic distribution |
+| `GET` | `/api/v1/gateway` | Per-gateway health stats + circuit state |
+| `DELETE` | `/api/v1/reset` | Reset all transactions and gateway stats |
+
+---
+
+<div align="center">
+
+**Built for high-concurrency, resiliency validation, and chaos engineering.**
+
+*If you found this useful, consider giving it a ⭐*
+
+</div>
