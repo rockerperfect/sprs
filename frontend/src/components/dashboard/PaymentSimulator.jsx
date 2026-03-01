@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { simulateBulk } from '../../api/payment.api';
-import { Settings, Play, CircleCheck, CircleAlert, Minus, Plus } from 'lucide-react';
+import { Settings, Play, CircleCheck, CircleAlert, Minus, Plus, Loader2 } from 'lucide-react';
 
 const MIN = 10;
 const MAX = 1000;
@@ -18,28 +18,19 @@ const PaymentSimulator = ({ onSimulationComplete }) => {
         setInputValue(String(clamped));
     };
 
-    const handleSliderChange = (e) => {
-        applyCount(Number(e.target.value));
-    };
+    const handleSliderChange = (e) => applyCount(Number(e.target.value));
 
     const handleInputChange = (e) => {
-        // Allow typing freely, only digits
         const raw = e.target.value.replace(/[^0-9]/g, '');
         setInputValue(raw);
     };
 
     const handleInputBlur = () => {
         const parsed = parseInt(inputValue, 10);
-        if (isNaN(parsed) || parsed < MIN) {
-            applyCount(MIN);
-        } else {
-            applyCount(parsed);
-        }
+        applyCount(isNaN(parsed) || parsed < MIN ? MIN : parsed);
     };
 
-    const handleInputKeyDown = (e) => {
-        if (e.key === 'Enter') e.target.blur();
-    };
+    const handleInputKeyDown = (e) => { if (e.key === 'Enter') e.target.blur(); };
 
     const decrement = () => applyCount(Math.round((count - STEP) / STEP) * STEP);
     const increment = () => applyCount(Math.round((count + STEP) / STEP) * STEP);
@@ -62,7 +53,7 @@ const PaymentSimulator = ({ onSimulationComplete }) => {
     };
 
     return (
-        <div className="bg-[#161b22] rounded-xl border border-[#30363d] p-5 sm:p-6">
+        <div className="bg-[#161b22] rounded-xl border border-indigo-500/20 p-5 sm:p-6 glow-accent">
             <div className="flex items-center gap-2 mb-5">
                 <Settings className="w-4 h-4 text-indigo-400 shrink-0" />
                 <h2 className="text-xs font-semibold text-[#e6edf3] uppercase tracking-widest">Traffic Simulator</h2>
@@ -74,7 +65,7 @@ const PaymentSimulator = ({ onSimulationComplete }) => {
                         Transaction Volume
                     </label>
 
-                    {/* Slider row with - and + buttons */}
+                    {/* Slider row */}
                     <div className="flex items-center gap-3">
                         <button
                             onClick={decrement}
@@ -94,9 +85,7 @@ const PaymentSimulator = ({ onSimulationComplete }) => {
 
                         <input
                             type="range"
-                            min={MIN}
-                            max={MAX}
-                            step={STEP}
+                            min={MIN} max={MAX} step={STEP}
                             value={count}
                             onChange={handleSliderChange}
                             className="flex-1"
@@ -122,43 +111,49 @@ const PaymentSimulator = ({ onSimulationComplete }) => {
                     {/* Scale labels + manual input */}
                     <div className="flex items-center justify-between mt-3 gap-3">
                         <span className="text-xs text-[#8b949e] shrink-0">{MIN}</span>
-
-                        {/* Manual integer input */}
-                        <div className="flex items-center gap-1.5">
-                            <input
-                                type="text"
-                                inputMode="numeric"
-                                pattern="[0-9]*"
-                                value={inputValue}
-                                onChange={handleInputChange}
-                                onBlur={handleInputBlur}
-                                onKeyDown={handleInputKeyDown}
-                                aria-label="Transaction count"
-                                className="w-20 text-center text-sm font-semibold font-data
-                                           text-indigo-400 bg-indigo-950 border border-indigo-800
-                                           rounded-lg px-2 py-1 outline-none
-                                           focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/40
-                                           transition-all duration-150"
-                            />
-                        </div>
-
+                        <input
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            value={inputValue}
+                            onChange={handleInputChange}
+                            onBlur={handleInputBlur}
+                            onKeyDown={handleInputKeyDown}
+                            aria-label="Transaction count"
+                            className="w-20 text-center text-sm font-semibold font-data
+                                       text-indigo-300 bg-indigo-950 border border-indigo-700
+                                       rounded-lg px-2 py-1 outline-none
+                                       focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/40
+                                       transition-all duration-150"
+                        />
                         <span className="text-xs text-[#8b949e] shrink-0">{MAX}</span>
                     </div>
                 </div>
 
+                {/* Run button */}
                 <button
                     onClick={handleSimulate}
                     disabled={isSimulating}
                     className="btn-primary w-full flex items-center justify-center gap-2"
                 >
-                    <Play className={`w-4 h-4 shrink-0 ${isSimulating ? 'animate-pulse' : ''}`} />
-                    {isSimulating ? 'Simulating...' : 'Run Simulation'}
+                    {isSimulating ? (
+                        <>
+                            <Loader2 className="w-4 h-4 shrink-0 animate-spin" />
+                            Simulating…
+                        </>
+                    ) : (
+                        <>
+                            <Play className="w-4 h-4 shrink-0" />
+                            Run Simulation
+                        </>
+                    )}
                 </button>
 
+                {/* Result toast */}
                 {result && (
-                    <div className={`p-3 rounded-lg flex items-start gap-2.5 text-sm border ${result.success
-                        ? 'bg-[#0d2818] border-emerald-900 text-emerald-400'
-                        : 'bg-[#2d0d0d] border-red-900 text-red-400'
+                    <div className={`p-3 rounded-lg flex items-start gap-2.5 text-sm border transition-all duration-300 ${result.success
+                            ? 'bg-[#0d2818] border-emerald-900 text-emerald-400'
+                            : 'bg-[#2d0d0d] border-red-900 text-red-400'
                         }`}>
                         {result.success ? (
                             <CircleCheck className="w-4 h-4 shrink-0 mt-0.5" />

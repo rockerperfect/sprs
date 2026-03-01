@@ -1,7 +1,7 @@
 import React from 'react';
 import { ShieldCheck, TrendingDown, LockKeyhole, LockKeyholeOpen, RefreshCw } from 'lucide-react';
 
-const MetricsTable = ({ stats }) => {
+const MetricsTable = ({ stats, isRefreshing = false }) => {
     const getStatusBadge = (status) => {
         switch (status) {
             case 'Healthy':
@@ -54,15 +54,30 @@ const MetricsTable = ({ stats }) => {
         }
     };
 
+    /** Per-row decorations based on state */
+    const getRowDecoration = (row) => {
+        if (row.circuitState === 'OPEN')
+            return 'border-l-2 border-red-500/60 bg-red-950/10 shadow-[inset_4px_0_12px_rgba(248,113,113,0.06)]';
+        if (row.status === 'Degraded')
+            return 'border-l-2 border-amber-500/50 bg-amber-950/5';
+        return 'border-l-2 border-transparent';
+    };
+
     return (
-        <div className="bg-[#161b22] rounded-xl border border-[#30363d] overflow-hidden">
+        <div className={`bg-[#161b22] rounded-xl border border-[#30363d] overflow-hidden accent-top-line shimmer-wrap ${isRefreshing ? 'shimmer-active' : ''}`}>
+            {/* Header */}
             <div className="px-5 py-4 border-b border-[#30363d] flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-indigo-500 shrink-0"></span>
+                <span className="w-2 h-2 rounded-full bg-indigo-500 shrink-0 shadow-[0_0_6px_rgba(99,102,241,0.8)]"></span>
                 <h3 className="text-xs font-semibold text-[#e6edf3] uppercase tracking-widest">Gateway Health Stats</h3>
+                {isRefreshing && (
+                    <span className="ml-auto text-[10px] text-[#484f58] animate-pulse">Refreshing…</span>
+                )}
             </div>
+
+            {/* Table */}
             <div className="overflow-x-auto">
                 <table className="w-full text-sm text-left min-w-[600px]">
-                    <thead className="bg-[#0d1117] text-[#8b949e] text-xs uppercase tracking-widest">
+                    <thead className="bg-[#0d1117] text-[#8b949e] text-xs uppercase tracking-widest sticky top-0 z-10">
                         <tr>
                             <th className="px-5 py-3 font-medium whitespace-nowrap">Gateway</th>
                             <th className="px-5 py-3 font-medium whitespace-nowrap">Status</th>
@@ -81,7 +96,10 @@ const MetricsTable = ({ stats }) => {
                             </tr>
                         )}
                         {stats.map((row) => (
-                            <tr key={row.gateway} className="hover:bg-[#1c2333] transition-colors duration-150">
+                            <tr
+                                key={row.gateway}
+                                className={`hover:bg-[#1c2333] transition-all duration-200 ${getRowDecoration(row)}`}
+                            >
                                 <td className="px-5 py-4 font-semibold text-[#e6edf3] font-data whitespace-nowrap">{row.gateway}</td>
                                 <td className="px-5 py-4">{getStatusBadge(row.status)}</td>
                                 <td className="px-5 py-4">{getCircuitBadge(row.circuitState)}</td>
