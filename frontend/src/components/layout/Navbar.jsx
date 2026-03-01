@@ -1,15 +1,16 @@
 import React from 'react';
-import { Activity } from 'lucide-react';
 
 const Navbar = () => {
     return (
-        <nav className="bg-[#161b22] border-b border-[#30363d] px-4 sm:px-6 py-3 fixed w-full z-10 top-0 backdrop-blur-sm">
+        <nav className="bg-[#161b22] border-b border-[#30363d] px-4 sm:px-6 py-4 fixed w-full z-10 top-0 backdrop-blur-sm">
             <div className="flex items-center justify-between max-w-screen-2xl mx-auto">
                 <div className="flex items-center gap-3">
-                    <div className="p-1.5 rounded-lg bg-gradient-to-br from-indigo-600 to-violet-600 shadow-[0_0_12px_rgba(99,102,241,0.4)]">
-                        <Activity className="h-5 w-5 text-white" />
-                    </div>
-                    <span className="text-base font-bold text-[#e6edf3] tracking-tight">
+                    <img
+                        src="/icon.png"
+                        alt="SPRS Logo"
+                        className="h-11 w-11 rounded-xl object-contain shadow-[0_0_12px_rgba(99,102,241,0.3)]"
+                    />
+                    <span className="text-lg font-bold text-[#e6edf3] tracking-tight">
                         SPRS <span className="text-indigo-400 font-normal hidden sm:inline">Dashboard</span>
                     </span>
                 </div>
