@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="prd_resources/icon.png" alt="SPRS Logo" width="100" height="100" style="border-radius: 20px;" />
+<img src="frontend/public/icon.png" alt="SPRS Logo" width="100" height="100" style="border-radius: 20px;" />
 
 # Smart Payment Routing Simulator
 
