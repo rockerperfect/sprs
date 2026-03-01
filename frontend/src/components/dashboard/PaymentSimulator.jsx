@@ -81,9 +81,12 @@ const PaymentSimulator = ({ onSimulationComplete }) => {
                             disabled={count <= MIN}
                             aria-label="Decrease by 10"
                             className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg
-                                       bg-[#1c2333] border border-[#30363d] text-[#8b949e]
-                                       hover:bg-[#21262d] hover:text-[#e6edf3] hover:border-[#484f58]
-                                       disabled:opacity-30 disabled:cursor-not-allowed
+                                       bg-[#1c2333] border border-[#4a5568] text-[#c9d1d9]
+                                       shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]
+                                       hover:bg-indigo-900/60 hover:border-indigo-500 hover:text-white
+                                       hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_0_8px_rgba(99,102,241,0.5)]
+                                       active:scale-95
+                                       disabled:opacity-25 disabled:cursor-not-allowed
                                        transition-all duration-150"
                         >
                             <Minus className="w-3.5 h-3.5" />
@@ -104,9 +107,12 @@ const PaymentSimulator = ({ onSimulationComplete }) => {
                             disabled={count >= MAX}
                             aria-label="Increase by 10"
                             className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg
-                                       bg-[#1c2333] border border-[#30363d] text-[#8b949e]
-                                       hover:bg-[#21262d] hover:text-[#e6edf3] hover:border-[#484f58]
-                                       disabled:opacity-30 disabled:cursor-not-allowed
+                                       bg-[#1c2333] border border-[#4a5568] text-[#c9d1d9]
+                                       shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]
+                                       hover:bg-indigo-900/60 hover:border-indigo-500 hover:text-white
+                                       hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_0_8px_rgba(99,102,241,0.5)]
+                                       active:scale-95
+                                       disabled:opacity-25 disabled:cursor-not-allowed
                                        transition-all duration-150"
                         >
                             <Plus className="w-3.5 h-3.5" />
@@ -151,8 +157,8 @@ const PaymentSimulator = ({ onSimulationComplete }) => {
 
                 {result && (
                     <div className={`p-3 rounded-lg flex items-start gap-2.5 text-sm border ${result.success
-                            ? 'bg-[#0d2818] border-emerald-900 text-emerald-400'
-                            : 'bg-[#2d0d0d] border-red-900 text-red-400'
+                        ? 'bg-[#0d2818] border-emerald-900 text-emerald-400'
+                        : 'bg-[#2d0d0d] border-red-900 text-red-400'
                         }`}>
                         {result.success ? (
                             <CircleCheck className="w-4 h-4 shrink-0 mt-0.5" />
