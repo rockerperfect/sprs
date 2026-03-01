@@ -1,4 +1,4 @@
-const uuid = require('uuid');
+// UUID generation handled by routing service
 const routingService = require('../services/routing.service');
 
 const processPayment = async (req, res, next) => {
