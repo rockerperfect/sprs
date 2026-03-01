@@ -1,5 +1,8 @@
 import React from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import {
+    BarChart, Bar, XAxis, YAxis, CartesianGrid,
+    Tooltip, Legend, ResponsiveContainer
+} from 'recharts';
 
 const SuccessRateChart = ({ stats }) => {
     const data = stats.map(s => ({
@@ -22,13 +25,11 @@ const SuccessRateChart = ({ stats }) => {
                             <CartesianGrid strokeDasharray="3 3" stroke="#21262d" vertical={false} />
                             <XAxis
                                 dataKey="name"
-                                axisLine={false}
-                                tickLine={false}
+                                axisLine={false} tickLine={false}
                                 tick={{ fill: '#8b949e', fontSize: 11 }}
                             />
                             <YAxis
-                                axisLine={false}
-                                tickLine={false}
+                                axisLine={false} tickLine={false}
                                 domain={[0, 100]}
                                 tick={{ fill: '#8b949e', fontSize: 11 }}
                             />
@@ -37,10 +38,10 @@ const SuccessRateChart = ({ stats }) => {
                                 contentStyle={{
                                     backgroundColor: '#1c2333',
                                     border: '1px solid #30363d',
-                                    borderRadius: '8px',
+                                    borderRadius: '10px',
                                     color: '#e6edf3',
                                     fontSize: '12px',
-                                    boxShadow: '0 4px 20px rgba(0,0,0,0.4)'
+                                    boxShadow: '0 8px 32px rgba(0,0,0,0.5)'
                                 }}
                                 itemStyle={{ color: '#e6edf3' }}
                             />
@@ -49,8 +50,16 @@ const SuccessRateChart = ({ stats }) => {
                                     <span style={{ color: '#8b949e', fontSize: '11px' }}>{value}</span>
                                 )}
                             />
-                            <Bar dataKey="Success" stackId="a" fill="#34d399" radius={[0, 0, 4, 4]} />
-                            <Bar dataKey="Failure" stackId="a" fill="#f87171" radius={[4, 4, 0, 0]} />
+                            <Bar
+                                dataKey="Success" stackId="a" fill="#34d399"
+                                radius={[0, 0, 5, 5]}
+                                animationDuration={900} animationEasing="ease-out"
+                            />
+                            <Bar
+                                dataKey="Failure" stackId="a" fill="#f87171"
+                                radius={[5, 5, 0, 0]}
+                                animationDuration={900} animationEasing="ease-out"
+                            />
                         </BarChart>
                     </ResponsiveContainer>
                 </div>
