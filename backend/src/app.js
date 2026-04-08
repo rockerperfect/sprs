@@ -9,11 +9,32 @@ const requestLogger = require('./middleware/requestLogger');
 const app = express();
 
 // Middleware
-app.use(helmet());
-app.use(cors());
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
+
+const corsOptions = {
+  origin: process.env.FRONTEND_URL || '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // Enable pre-flight for all routes
+
 app.use(express.json());
 app.use(morgan('dev'));
 app.use(requestLogger);
+
+// Root route
+app.get('/', (req, res) => {
+  res.status(200).json({ 
+    message: 'SPRS API is running',
+    docs: 'https://github.com/rockerperfect/sprs',
+    health: '/health'
+  });
+});
 
 // Health check route
 app.get('/health', (req, res) => {
