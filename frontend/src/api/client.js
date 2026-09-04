@@ -1,9 +1,11 @@
 import axios from 'axios';
 
 const getBaseURL = () => {
-  const url = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
-  // Remove any trailing slashes
-  return url.endsWith('/') ? url.slice(0, -1) : url;
+  if (import.meta.env.VITE_API_URL) {
+    const url = import.meta.env.VITE_API_URL;
+    return url.endsWith('/') ? url.slice(0, -1) : url;
+  }
+  return import.meta.env.PROD ? '/api/v1' : 'http://localhost:5000/api/v1';
 };
 
 const api = axios.create({
