@@ -25,6 +25,8 @@ pnpm-debug.log*
 .env
 .env.*
 !.env.example
+dist/
+node_modules/
 
 prd_resources/
 smart-payment-routing-simulator
